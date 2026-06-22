@@ -1,0 +1,127 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+version = '1.0.0'
+group = 'dev.compat.cosmonauticsdeepair'
+
+base {
+    archivesName = 'cosmonauticsdeepair'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+
+    // RyanHCode Maven (Where Sable and Sable Companion actually live)
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "RyanHCode Maven"
+                url = uri("https://maven.ryanhcode.dev/releases")
+            }
+        }
+        filter {
+            includeGroup("dev.ryanhcode.sable")
+            includeGroup("dev.ryanhcode.sable-companion")
+        }
+    }
+
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    parchment {
+        minecraftVersion = project.parchment_minecraft_version
+        mappingsVersion = project.parchment_mappings_version
+    }
+
+    runs {
+        client {
+            client()
+            programArguments.addAll '--username', 'Dev'
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+        data {
+            data()
+        }
+        // This makes sure the development environment reads your mixin
+        configureEach {
+            programArgument "-mixin.config=cosmonauticsdeepair.mixins.json"
+        }
+    }
+
+    mods {
+        cosmonauticsdeepair {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+// --- Workaround for shaded mod jars with a broken javac Plugin SPI -----------
+def sanitizedLibsDir = layout.buildDirectory.dir('sanitized-libs')
+
+def sanitizeJarTasks = fileTree('libs') { include '*.jar' }.files.collect { jarFile ->
+    tasks.register("sanitize-${jarFile.name}", Zip) {
+        from(zipTree(jarFile)) {
+            exclude 'META-INF/services/com.sun.source.util.Plugin'
+        }
+        destinationDirectory.set(sanitizedLibsDir)
+        archiveFileName.set(jarFile.name)
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+}
+
+dependencies {
+    // FIXED: Changed from "maven.modrinth" to RyanHCode's maven coordinate format
+    compileOnly "dev.ryanhcode.sable:sable-common-${minecraft_version}:${sable_version}"
+
+    // Sable Companion from RyanHCode's maven
+    compileOnly "dev.ryanhcode.sable-companion:sable-companion-common-${minecraft_version}:${sable_companion_version}"
+
+    // Local jars in your /libs (like Create Submarine) get processed here
+    sanitizeJarTasks.each { t -> compileOnly files(t) }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version: project.minecraft_version,
+            neoforge_version : project.neoforge_version,
+            mod_version       : project.version
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes([
+                'Specification-Title'    : 'cosmonauticsdeepair',
+                'Specification-Vendor'   : 'CosmonauticsDeepAir',
+                'Specification-Version'  : '1',
+                'Implementation-Title'   : project.name,
+                'Implementation-Version' : project.version,
+                'Implementation-Vendor'  : 'CosmonauticsDeepAir',
+                // ADD THIS LINE: Tells production NeoForge to read your Mixin config
+                'MixinConfigs'           : 'cosmonauticsdeepair.mixins.json' 
+        ])
+    }
+}

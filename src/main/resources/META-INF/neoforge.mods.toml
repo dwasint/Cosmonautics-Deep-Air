@@ -1,0 +1,40 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "cosmonauticsdeepair"
+version = "${mod_version}"
+displayName = "Cosmonautics Deep Air"
+description = '''Standalone compatibility bridge between Create: Deep Seas
+and Cosmonautics. Lets entities breathe normally
+while inside a sealed, unbreached, oxygenated sable sublevel.'''
+authors = "borbop"
+
+[[dependencies.cosmonauticsdeepair]]
+    modId = "neoforge"
+    type = "required"
+    versionRange = "[${neoforge_version},)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.cosmonauticsdeepair]]
+    modId = "minecraft"
+    type = "required"
+    versionRange = "[${minecraft_version},1.22)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.cosmonauticsdeepair]]
+    modId = "create_submarine"
+    type = "required"
+    versionRange = "[1.0,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[dependencies.cosmonauticsdeepair]]
+    modId = "cosmonautics"
+    type = "optional"
+    versionRange = "[1.0,)"
+    ordering = "AFTER"
+    side = "BOTH"
