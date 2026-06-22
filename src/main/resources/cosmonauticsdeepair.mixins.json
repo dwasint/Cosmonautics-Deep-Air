@@ -1,2 +1,12 @@
 {
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.compat.cosmonauticsdeepair.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

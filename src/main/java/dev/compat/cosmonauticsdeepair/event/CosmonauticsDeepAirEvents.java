@@ -20,7 +20,6 @@ public final class CosmonauticsDeepAirEvents {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onLivingBreathe(LivingBreatheEvent event) {
         LivingEntity entity = event.getEntity();
-        if (entity.level().isClientSide) return;
 
         SubLevel subLevel = SubmarineLocator.findContaining(
                 entity.level(), entity.getX(), entity.getY(), entity.getZ());
