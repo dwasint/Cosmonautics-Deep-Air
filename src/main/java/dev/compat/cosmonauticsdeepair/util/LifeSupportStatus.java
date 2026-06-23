@@ -101,7 +101,7 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
     }
 
     private static void updateCompartmentCaches(UUID subLevelId, Level plotLevel, long gameTick) {
-        if (plotLevel == null) return;
+        if (plotLevel == null || subLevelId == null) return;
 
         Long lastCheck = CACHE_TIMESTAMPS.get(subLevelId);
         if (lastCheck != null && gameTick - lastCheck < CACHE_TTL) return;
@@ -121,6 +121,11 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
         gravCache.clear();
 
         for (CompartmentDetector.Component comp : CompartmentTracker.getCompartments(subLevelId)) {
+            BlockPos anchorPos = comp.anchor();
+            if (anchorPos == null) {
+                continue; 
+            }
+
             boolean foundOxy = false;
             boolean foundGrav = false;
 
@@ -158,8 +163,9 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
                 }
             }
 
-            oxyCache.put(comp.anchor(), foundOxy);
-            gravCache.put(comp.anchor(), foundGrav);
+            // Safe to put now that anchorPos is guaranteed non-null
+            oxyCache.put(anchorPos, foundOxy);
+            gravCache.put(anchorPos, foundGrav);
         }
         CACHE_TIMESTAMPS.put(subLevelId, gameTick);
     }

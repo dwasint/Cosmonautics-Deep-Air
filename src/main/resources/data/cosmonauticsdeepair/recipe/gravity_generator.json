@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " G ",
+    "MCM",
+    " L "
+  ],
+  "key": {
+    "G": {
+      "item": "simulated:gimbal_sensor"
+    },
+    "M": {
+      "item": "rocketnautics:magnetic_stabilizer"
+    },
+    "C": {
+      "item": "create:copper_casing"
+    },
+    "L": {
+      "item": "create:redstone_link"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "cosmonauticsdeepair:gravity_generator"
+  }
+}
