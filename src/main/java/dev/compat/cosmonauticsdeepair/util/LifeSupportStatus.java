@@ -7,6 +7,7 @@ import com.maxenonyme.createsubmarine.submarine.system.SubmarinePressureSystem;
 import com.maxenonyme.createsubmarine.submarine.util.SubLevelRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3d;
 
 import java.util.Map;
@@ -27,8 +28,6 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
         return new LifeSupportStatus(sealed, breached, breathable);
     }
 
-    /** Per-room check — breathable only if the entity is inside a sealed,
-     *  uncompromised compartment that contains an active oxygen diffuser. */
     public static LifeSupportStatus of(UUID subLevelId, Vector3d localPos, long gameTick) {
         boolean sealed = CompartmentTracker.hasAnySealed(subLevelId);
         boolean breached = SubmarinePressureSystem.isBreached(subLevelId);
@@ -36,13 +35,55 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
         Level plotLevel = SubLevelRegistry.getLevel(subLevelId);
 
         boolean inOxygenatedRoom = false;
-        BlockPos entityPlotPos = BlockPos.containing(localPos.x, localPos.y, localPos.z);
+
+        double x = localPos.x;
+        double y = localPos.y;
+        double z = localPos.z;
+        
+        BlockPos[] checkPositions = new BlockPos[] {
+            BlockPos.containing(x, y + 0.1, z),       // Center feet
+            BlockPos.containing(x, y + 0.8, z),       // Center torso
+            BlockPos.containing(x + 0.2, y + 0.1, z), // East offset
+            BlockPos.containing(x - 0.2, y + 0.1, z), // West offset
+            BlockPos.containing(x, y + 0.1, z + 0.2), // South offset
+            BlockPos.containing(x, y + 0.1, z - 0.2)  // North offset
+        };
 
         for (CompartmentDetector.Component c : CompartmentTracker.getCompartments(subLevelId)) {
-            if (!c.sealed() || CompartmentTracker.isCompromised(subLevelId, c.anchor()))
+            boolean isCompromised = false;
+            try {
+                isCompromised = CompartmentTracker.isCompromised(subLevelId, c.anchor());
+            } catch (NullPointerException e) {
+                isCompromised = false; 
+            }
+
+            if (!c.sealed() || isCompromised)
                 continue;
-            if (!c.internal().contains(entityPlotPos))
+
+            boolean inside = false;
+            for (BlockPos pos : checkPositions) {
+                // Scenario A: Standard clear interior air block
+                if (c.internal().contains(pos)) {
+                    inside = true;
+                    break;
+                }
+                
+                // Scenario B: The position maps to the hull set because a lever/button is attached there.
+                // We check if the player is technically occupying it and if it's a passable/non-suffocating block.
+                if (plotLevel != null && c.hull().contains(pos)) {
+                    BlockState state = plotLevel.getBlockState(pos);
+                    // If the block doesn't suffocate the player (levers, buttons, torches, air, etc.), 
+                    // it's a partial block inside the room boundary, actually disgusting
+                    if (!state.isSuffocating(plotLevel, pos)) {
+                        inside = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!inside)
                 continue;
+
             if (compartmentHasDiffuser(subLevelId, c, plotLevel, gameTick))
                 inOxygenatedRoom = true;
             break;

@@ -4,6 +4,8 @@
   "package": "dev.compat.cosmonauticsdeepair.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "EntitySubmarineGravityMixin",
+    "LivingEntitySubmarineDragMixin"
   ],
   "client": [],
   "injectors": {
