@@ -36,6 +36,8 @@ public abstract class EntitySubmarineGravityMixin {
 
         UUID subId = sub.getUniqueId();
         LifeSupportStatus status = LifeSupportStatus.of(subId, localPos, level().getGameTime());
-        return status.breathable() ? 0.06 : modified;
+        
+        // Changed condition to depend entirely on the operational generator status!
+        return status.hasGravity() ? 0.06 : modified; 
     }
 }

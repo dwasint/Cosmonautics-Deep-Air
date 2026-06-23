@@ -65,6 +65,6 @@ public abstract class LivingEntitySubmarineDragMixin extends Entity {
         }
 
         LifeSupportStatus status = LifeSupportStatus.of(sub.getUniqueId(), localPos, instance.level().getGameTime());
-        return status.breathable();
+        return status.hasGravity();
     }
 }

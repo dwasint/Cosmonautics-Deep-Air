@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "cosmonauticsdeepair:block/gravity_generator" }
+  }
+}

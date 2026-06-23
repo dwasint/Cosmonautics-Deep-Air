@@ -33,7 +33,7 @@ public final class CosmonauticsDeepAirEvents {
         }
 
         UUID subId = subLevel.getUniqueId();
-        // Use the overworld's game time, not the sub-level's
+        // Use the overworld's game time, not the sub-level's 
         long gameTick = entity.level().getGameTime();
         LifeSupportStatus status = LifeSupportStatus.of(subId, localPos, gameTick);
         if (status.breathable()) {
