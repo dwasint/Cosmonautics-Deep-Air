@@ -52,16 +52,17 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
         };
 
         for (CompartmentDetector.Component c : CompartmentTracker.getCompartments(subLevelId)) {
+            // If we already found both, we can safely stop looping early
+            if (inOxygenatedRoom && inGravityRoom) {
+                break;
+            }
+
             boolean isCompromised = false;
             try {
                 isCompromised = CompartmentTracker.isCompromised(subLevelId, c.anchor());
             } catch (NullPointerException e) {
                 isCompromised = false; 
             }
-
-            // Gravity only functions if sealed and not breached!
-            if (!c.sealed() || isCompromised)
-                continue;
 
             boolean inside = false;
             for (BlockPos pos : checkPositions) {
@@ -82,19 +83,23 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
             if (!inside)
                 continue;
 
+            // Update the cache for this subLevel if needed
             updateCompartmentCaches(subLevelId, plotLevel, gameTick);
 
-            if (DIFFUSER_CACHE.getOrDefault(subLevelId, Map.of()).getOrDefault(c.anchor(), false)) {
-                inOxygenatedRoom = true;
+            if (c.sealed() && !isCompromised) {
+                if (DIFFUSER_CACHE.getOrDefault(subLevelId, Map.of()).getOrDefault(c.anchor(), false)) {
+                    inOxygenatedRoom = true;
+                }
             }
-            if (GRAVITY_CACHE.getOrDefault(subLevelId, Map.of()).getOrDefault(c.anchor(), false)) {
-                inGravityRoom = true;
+
+            if (!isCompromised) {
+                if (GRAVITY_CACHE.getOrDefault(subLevelId, Map.of()).getOrDefault(c.anchor(), false)) {
+                    inGravityRoom = true;
+                }
             }
-            break;
         }
 
         boolean breathable = inOxygenatedRoom && !breached;
-        // Gravity applies if the specific sealed compartment contains an online generator
         boolean hasGravity = inGravityRoom && !breached; 
 
         return new LifeSupportStatus(sealed, breached, breathable, hasGravity);

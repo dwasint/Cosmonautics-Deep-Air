@@ -30,7 +30,6 @@ public final class CosmonauticsDeepAir {
                 event.accept(ModRegistries.GRAVITY_GENERATOR_ITEM.get());
             }
         });
-
         NeoForge.EVENT_BUS.register(new CosmonauticsDeepAirEvents());
     }
 }
