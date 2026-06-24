@@ -92,7 +92,7 @@ public record LifeSupportStatus(boolean sealed, boolean breached, boolean breath
                 }
             }
 
-            if (!isCompromised) {
+            if (c.sealed() && !isCompromised) {
                 if (GRAVITY_CACHE.getOrDefault(subLevelId, Map.of()).getOrDefault(c.anchor(), false)) {
                     inGravityRoom = true;
                 }
